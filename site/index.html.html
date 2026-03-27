@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>产业研究及市场分析智能平台 Demo</title>
+  <style>
+    :root {
+      --bg: #eef3f9;
+      --panel: #fff;
+      --line: #d9e3ef;
+      --text: #17324b;
+      --muted: #6d8298;
+      --primary: #0d5aa7;
+      --primary-2: #2f89e6;
+      --success: #16a34a;
+      --warn: #f59e0b;
+      --danger: #ef3b12;
+      --shadow: 0 18px 40px rgba(16, 51, 93, 0.08);
+      --shadow-soft: 0 10px 22px rgba(16, 51, 93, 0.06);
+      --max: 1440px;
+      --sidebar: 224px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(74,163,255,0.08), transparent 26%), linear-gradient(180deg, #edf3f9 0%, #f8fbff 100%);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    img { display: block; max-width: 100%; }
+    .top-switch {
+      position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px);
+      background: rgba(13, 23, 36, 0.86); border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .top-switch-inner, .portal-top-inner, .portal-nav-inner, .page-wrap {
+      width: min(var(--max), calc(100% - 32px)); margin: 0 auto;
+    }
+    .top-switch-inner {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0;
+    }
+    .top-switch-title { color: #fff; font-size: 14px; letter-spacing: 0.04em; }
+    .mode-tab {
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9);
+      padding: 9px 16px; border-radius: 999px; cursor: pointer;
+    }
+    .mode-tab.active { background: #fff; color: var(--primary); font-weight: 700; }
+    .workspace { display: none; }
+    .workspace.active { display: block; }
+    .portal-top {
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.92));
+      border-bottom: 1px solid rgba(217,227,239,0.92);
+    }
+    .portal-top-inner {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 16px; }
+    .brand-mark {
+      width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; color: #fff; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2)); box-shadow: 0 14px 28px rgba(13,90,167,0.24);
+    }
+    .brand-title { font-size: 16px; font-weight: 700; color: #1f4e83; }
+    .portal-tools { display: flex; align-items: center; gap: 14px; }
+    .top-search {
+      width: 240px; height: 40px; border: 1px solid var(--line); padding: 0 14px; color: var(--muted); background: #fff;
+    }
+    .top-user { color: var(--muted); font-size: 13px; cursor: pointer; }
+    .portal-nav { background: linear-gradient(90deg, #ef3b12, #ff4f1c); box-shadow: 0 10px 20px rgba(239,59,18,0.14); }
+    .portal-nav-inner { display: flex; gap: 18px; align-items: center; overflow-x: auto; }
+    .portal-link {
+      color: #fff; font-size: 14px; font-weight: 700; padding: 14px 0 16px; position: relative; white-space: nowrap; cursor: pointer;
+    }
+    .portal-link.active::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 6px; height: 4px; border-radius: 999px; background: #fff;
+    }
+    .portal-page, .backend-page { display: none; }
+    .portal-page.active, .backend-page.active { display: block; }
+    .page-wrap { margin: 18px auto 42px; }
+    .panel, .feature-panel, .list-shell, .profile-shell, .backend-card {
+      background: var(--panel); border: 1px solid rgba(217,227,239,0.94); box-shadow: var(--shadow);
+    }
+    .panel { padding: 20px 22px; margin-bottom: 18px; }
+    .panel-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 14px; }
+    .stat-card {
+      border: 1px solid #dfe9f5; padding: 14px; box-shadow: var(--shadow-soft); min-height: 90px; background: #fff;
+    }
+    .stat-cap { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .stat-icon {
+      width: 24px; height: 24px; display: grid; place-items: center; color: #fff; font-size: 12px; border-radius: 50%;
+    }
+    .stat-num { font-size: 28px; font-weight: 700; line-height: 1; margin-top: 10px; }
+    .theme-gold .stat-icon { background: linear-gradient(135deg, #ffc658, #efab1d); }
+    .theme-gold .stat-num { color: #efab1d; }
+    .theme-green .stat-icon { background: linear-gradient(135deg, #6ce4af, #21a16a); }
+    .theme-green .stat-num { color: #21a16a; }
+    .theme-purple .stat-icon { background: linear-gradient(135deg, #bcc0ff, #6f78ff); }
+    .theme-purple .stat-num { color: #6f78ff; }
+    .theme-orange .stat-icon { background: linear-gradient(135deg, #ffd08d, #f08d21); }
+    .theme-orange .stat-num { color: #f08d21; }
+    .theme-pink .stat-icon { background: linear-gradient(135deg, #ffc6d3, #ff5c80); }
+    .theme-pink .stat-num { color: #ff5c80; }
+    .theme-cyan .stat-icon { background: linear-gradient(135deg, #8ce8dc, #28b7a5); }
+    .theme-cyan .stat-num { color: #28b7a5; }
+    .home-sections { display: grid; gap: 20px; }
+    .feature-panel { padding: 18px 22px 24px; }
+    .feature-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .feature-head strong { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+    .feature-head strong::before {
+      content: ""; width: 22px; height: 22px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 50%, #77c2ff 0 38%, transparent 40%), linear-gradient(135deg, #7fd0ff, #2f89e6);
+    }
+    .more-link { font-size: 13px; font-weight: 700; color: #1c3350; cursor: pointer; }
+    .pill-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill { padding: 7px 16px; border-radius: 999px; border: 1px solid #dbe7f4; background: #fff; color: #35506d; font-size: 13px; cursor: pointer; }
+    .pill.active {
+      color: #fff; border-color: transparent; background: linear-gradient(135deg, #2b8ff3, #8cc6ff); box-shadow: 0 10px 18px rgba(43,143,243,0.22);
+    }
+    .feature-body { display: grid; grid-template-columns: 1.06fr 0.94fr; gap: 24px; align-items: stretch; }
+    .feature-body.reverse { grid-template-columns: 0.94fr 1.06fr; }
+    .feature-body.reverse .feature-copy { order: 2; }
+    .feature-body.reverse .feature-media { order: 1; }
+    .feature-copy { display: flex; flex-direction: column; gap: 14px; }
+    .feature-highlight { display: grid; grid-template-columns: 74px 1fr; gap: 18px; align-items: start; }
+    .date-box {
+      min-height: 96px; display: grid; place-items: center; align-content: center; background: linear-gradient(180deg, #f6f8fb, #eff3f7);
+      border: 1px solid #edf2f6; color: #748091;
+    }
+    .date-box strong { font-size: 28px; line-height: 1; }
+    .date-box span { margin-top: 6px; font-size: 13px; }
+    .feature-main h3 { margin: 0 0 10px; font-size: 20px; line-height: 1.45; color: #1f3350; }
+    .feature-main p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .news-item {
+      display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 11px 0; border-bottom: 1px dashed #dbe5f0; font-size: 13px;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-item time { color: #5f7690; white-space: nowrap; }
+    .feature-media { min-height: 320px; overflow: hidden; box-shadow: 0 18px 36px rgba(25,48,79,0.12); background: #f2f6fb; }
+    .feature-media img { width: 100%; height: 100%; object-fit: cover; }
+    .list-shell { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 22px; min-height: 760px; background: #f4f7fb; }
+    .side-nav { background: #fff; box-shadow: inset 0 0 0 1px #edf2f7; align-self: start; }
+    .side-head { display: none; }
+    .side-link {
+      width: 100%; text-align: left; background: #fff; border: none; border-bottom: 1px solid #eef3f8; padding: 16px 18px; color: #223d59; cursor: pointer;
+    }
+    .side-link.active { background: #f3f7fc; color: var(--primary); font-weight: 700; }
+    .list-content { padding: 0 18px 18px 0; }
+    .crumb { display: none; }
+    .list-table { background: #fff; box-shadow: inset 0 0 0 1px #edf2f7; padding: 8px 14px 12px; }
+    .list-row {
+      display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center; padding: 16px 0; border-bottom: 1px dashed #dce5ef; font-size: 14px;
+    }
+    .list-row:last-child { border-bottom: none; }
+    .list-bullet { width: 12px; height: 12px; background: linear-gradient(135deg, #2f89e6, #0f5ca8); position: relative; }
+    .list-bullet::after {
+      content: ">"; position: absolute; inset: -1px 0 0 2px; color: #fff; font-size: 10px; font-weight: 700;
+    }
+    .list-row time { color: #57718c; white-space: nowrap; }
+    .pager { display: flex; justify-content: flex-end; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; padding-top: 18px; }
+    .pager .dot { width: 28px; height: 28px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); }
+    .pager .dot.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+    .profile-shell { display: grid; grid-template-columns: 190px 1fr; min-height: 760px; overflow: hidden; }
+    .profile-menu { border-right: 1px solid #ebf1f7; background: #fff; }
+    .profile-menu button {
+      width: 100%; text-align: left; border: none; background: #fff; color: #1f3751; padding: 18px; border-bottom: 1px solid #eef3f8; cursor: pointer;
+    }
+    .profile-menu button.active { background: linear-gradient(135deg, #0d5aa7, #6aa8e2); color: #fff; font-weight: 700; }
+    .profile-content { padding: 18px 24px 28px; background: #fff; }
+    .profile-panel { display: none; }
+    .profile-panel.active { display: block; }
+    .profile-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 2px dashed #ffd2d2;
+    }
+    .profile-header strong { font-size: 18px; color: var(--primary); }
+    .go-backend, .primary-btn, .ghost-btn {
+      height: 32px; padding: 0 14px; border: none; background: linear-gradient(135deg, #0f5ca8, #318fff); color: #fff; box-shadow: var(--shadow-soft);
+    }
+    .ghost-btn { background: #fff; color: #4b617b; border: 1px solid #dbe5f0; box-shadow: none; }
+    .profile-user { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 32px; }
+    .field { display: grid; grid-template-columns: 80px 1fr; gap: 16px; align-items: center; }
+    .field label { color: #354e68; font-size: 14px; }
+    .edit-box { display: grid; grid-template-columns: 1fr 56px; height: 40px; border: 1px solid #d9e3ef; background: #fff; }
+    .edit-box input, .edit-box select { border: none; padding: 0 14px; color: #41566f; background: transparent; }
+    .edit-box em { display: grid; place-items: center; color: #8091a5; background: #fbfdff; border-left: 1px solid #e7edf5; font-style: normal; }
+    .field-wide { grid-column: 2 / 3; }
+    .history-table { border: 1px solid #e7edf5; overflow: hidden; }
+    .history-head, .history-item { display: grid; grid-template-columns: 180px 1fr; gap: 10px; padding: 14px 18px; }
+    .history-head { background: #f6f9fd; color: #587390; font-weight: 700; font-size: 13px; }
+    .history-item { border-top: 1px solid #eef3f8; font-size: 14px; }
+    .backend-layout { display: grid; grid-template-columns: var(--sidebar) 1fr; min-height: calc(100vh - 54px); }
+    .backend-sidebar {
+      background: linear-gradient(180deg, #0f396a, #0d5aa7); color: #fff; padding: 18px 12px; box-shadow: 18px 0 34px rgba(12,56,104,0.16);
+    }
+    .backend-brand { padding: 8px 8px 18px; border-bottom: 1px solid rgba(255,255,255,0.12); margin-bottom: 18px; }
+    .backend-badge { display: none; }
+    .backend-brand h2 { margin: 0; font-size: 28px; line-height: 1.2; }
+    .backend-brand p { display: none; }
+    .backend-link {
+      width: 100%; text-align: left; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
+    }
+    .backend-link.active { background: rgba(255,255,255,0.16); box-shadow: 0 12px 24px rgba(11,41,77,0.18); }
+    .backend-main { background: #f5f7fb; padding: 20px 22px 30px; }
+    .backend-topbar {
+      height: 68px; display: flex; align-items: center; padding: 0 20px 0 24px; background: #fff; border: 1px solid #e5eaf1; box-shadow: var(--shadow-soft); margin-bottom: 18px;
+    }
+    .backend-topbar strong { font-size: 24px; color: #1d2f44; }
+    .backend-user { display: none; }
+    .backend-card { padding: 18px; }
+    .toolbar-row, .toolbar-actions, .toolbar-actions-right, .tag-list { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .toolbar-row { margin-bottom: 16px; }
+    .toolbar-row span { color: #71849a; font-size: 13px; }
+    .backend-input, .backend-select {
+      min-width: 130px; height: 32px; border: 1px solid #dfe7f0; background: #fff; padding: 0 10px; color: #60758d;
+    }
+    .mini-btn { border: 1px solid #d9e3ef; height: 26px; padding: 0 10px; background: #fff; color: #536a83; font-size: 12px; }
+    .mini-btn.danger { color: #ef4444; border-color: #fecaca; background: #fff5f5; }
+    .backend-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .backend-table th, .backend-table td { text-align: left; padding: 14px 8px; border-bottom: 1px solid #eef3f8; vertical-align: top; }
+    .backend-table th { color: #5a7390; font-weight: 700; }
+    .backend-table td { color: #354b64; }
+    .state-on { color: var(--primary-2); }
+    .state-wait { color: var(--warn); }
+    .state-pass { color: var(--success); }
+    .backend-tabs { display: flex; gap: 28px; border-bottom: 1px solid #edf2f7; margin-bottom: 16px; }
+    .backend-tabs button { border: none; background: transparent; padding: 12px 0; color: #4e657f; cursor: pointer; position: relative; }
+    .backend-tabs button.active { color: var(--primary-2); font-weight: 700; }
+    .backend-tabs button.active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--primary-2); }
+    .detail-layout { display: grid; grid-template-columns: 500px 1fr; gap: 20px; }
+    .form-card { background: #fff; border: 1px solid #e5eaf1; padding: 14px; }
+    .form-stack { display: grid; gap: 14px; }
+    .form-item label { display: block; font-size: 12px; color: #ef4444; margin-bottom: 8px; }
+    .form-item input, .form-item select, .form-item textarea { width: 100%; border: 1px solid #dfe7f0; padding: 10px 12px; resize: vertical; color: #41566f; min-height: 40px; background: #fff; }
+    .form-item textarea { min-height: 118px; }
+    .file-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .file-grid-head { display: grid; grid-template-columns: 1.6fr 0.9fr 0.9fr 1fr 1fr 0.7fr; gap: 10px; color: #677d96; font-size: 12px; padding: 12px 0; border-bottom: 1px solid #eef3f8; }
+    .empty { height: 180px; display: grid; place-items: center; color: #9aa8b7; font-size: 13px; }
+    .detail-actions { display: flex; justify-content: center; gap: 18px; margin-top: 18px; }
+    .push-card { background: #f8fbff; border: 1px solid #e8f0fa; padding: 16px 18px; margin-bottom: 14px; }
+    .push-card h4 { margin: 0 0 10px; color: var(--primary-2); font-size: 14px; }
+    .push-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .push-card time { float: right; color: #9ba9b8; font-size: 12px; }
+    .tag-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .tag-line { width: 4px; height: 24px; background: var(--primary-2); }
+    .tag-pill { height: 34px; padding: 0 16px; display: inline-flex; align-items: center; color: var(--primary-2); background: #f4f8ff; border: 1px solid #d7e8ff; }
+    .tag-pill.active { color: #fff; background: var(--primary-2); border-color: var(--primary-2); }
+    @media (max-width: 1280px) {
+      .stat-grid, .feature-body, .list-shell, .profile-shell, .backend-layout, .detail-layout, .profile-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  </style>
+</head>
+<body>
+  <div class="top-switch">
+    <div class="top-switch-inner">
+      <div class="top-switch-title">Pencil 原型结构 Demo</div>
+      <div>
+        <button class="mode-tab active" data-mode="portal">前台门户</button>
+        <button class="mode-tab" data-mode="backend">信息管理系统</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="workspace active" data-workspace="portal">
+    <header class="portal-top">
+      <div class="portal-top-inner">
+        <div class="brand">
+          <div class="brand-mark">logo</div>
+          <div class="brand-title">产业研究及市场分析智能平台</div>
+        </div>
+        <div class="portal-tools">
+          <input class="top-search" value="输入查询内容" />
+          <div class="top-user" data-open-profile>测试管理员</div>
+        </div>
+      </div>
+    </header>
+    <nav class="portal-nav">
+      <div class="portal-nav-inner">
+        <a class="portal-link active" data-portal="home">首页</a>
+        <a class="portal-link" data-portal="knowledge">知识库</a>
+        <a class="portal-link" data-portal="policy">产业政策及专项资金</a>
+        <a class="portal-link" data-portal="trend">行业趋势</a>
+        <a class="portal-link" data-portal="competition">竞争分析</a>
+        <a class="portal-link" data-portal="expo">展会资讯</a>
+      </div>
+    </nav>
+
+    <main class="portal-page active" data-page="home">
+      <div class="page-wrap">
+        <div class="panel">
+          <div><strong>知识库</strong></div>
+          <div class="stat-grid">
+            <div class="stat-card theme-gold"><div class="stat-cap"><span class="stat-icon">政</span>政策库</div><div class="stat-num">5,972,252</div></div>
+            <div class="stat-card theme-green"><div class="stat-cap"><span class="stat-icon">数</span>数据库</div><div class="stat-num">616,365</div></div>
+            <div class="stat-card theme-purple"><div class="stat-cap"><span class="stat-icon">企</span>企业库</div><div class="stat-num">2,557,252</div></div>
+            <div class="stat-card theme-orange"><div class="stat-cap"><span class="stat-icon">产</span>产品库</div><div class="stat-num">231,982</div></div>
+            <div class="stat-card theme-pink"><div class="stat-cap"><span class="stat-icon">展</span>展会资讯库</div><div class="stat-num">9,396,938</div></div>
+            <div class="stat-card theme-cyan"><div class="stat-cap"><span class="stat-icon">项</span>重大项目库</div><div class="stat-num">241,252</div></div>
+          </div>
+        </div>
+
+        <div class="home-sections">
+          <section class="feature-panel">
+            <div class="feature-head"><strong>产业政策及专项资金</strong><span class="more-link" data-jump="policy">查看更多+</span></div>
+            <div class="pill-row"><button class="pill active">国家政策法规与解读</button><button class="pill">地方政策法规与解读</button></div>
+            <div class="feature-body">
+              <div class="feature-copy">
+                <div class="feature-highlight">
+                  <div class="date-box"><strong>25</strong><span>2026-03</span></div>
+                  <div class="feature-main">
+                    <h3>工信部发布高端装备制造专项政策，明确支持智能化改造与核心装备升级</h3>
+                    <p>已完成政策正文、解读报告和相关试点项目的联动展示，支持用户快速跳转查看详细信息，为研究与申报工作提供统一入口。</p>
+                  </div>
+                </div>
+                <div class="news-list">
+                  <div class="news-item"><span>北京市智能制造专项资金申报开启</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>华东地区新增重点工程项目进入筹备阶段</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>机器人产业扶持政策解读文章已关联推送</span><time>2026-03-24</time></div>
+                  <div class="news-item"><span>重点项目设备投资机会跟踪更新第 6 条待判事项</span><time>2026-03-24</time></div>
+                </div>
+              </div>
+              <div class="feature-media"><img src="./产业政策专项资金配图.png" alt="产业政策配图" /></div>
+            </div>
+          </section>
+
+          <section class="feature-panel">
+            <div class="feature-head"><strong>行业趋势</strong><span class="more-link" data-jump="trend">查看更多+</span></div>
+            <div class="pill-row"><button class="pill active">行业景气</button><button class="pill">数控机床</button><button class="pill">智能制造</button></div>
+            <div class="feature-body reverse">
+              <div class="feature-media"><img src="./行业趋势配图.png" alt="行业趋势配图" /></div>
+              <div class="feature-copy">
+                <div class="feature-highlight">
+                  <div class="date-box"><strong>25</strong><span>2026-03</span></div>
+                  <div class="feature-main">
+                    <h3>液压设备行业周报已更新，市场需求与产能利用率同步上升</h3>
+                    <p>西部及沿海区域制造项目新增明显，重点行业景气变化率和设备心智指数持续抬升，平台可分类查看重点赛道。</p>
+                  </div>
+                </div>
+                <div class="news-list">
+                  <div class="news-item"><span>数控机床订单增幅连续三周扩大</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>环保装备市场价格趋稳 5 条</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>智能制造新型产线企业动态跟踪完成</span><time>2026-03-24</time></div>
+                  <div class="news-item"><span>机器人行业市场景气度监测指数同比上升</span><time>2026-03-24</time></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="feature-panel">
+            <div class="feature-head"><strong>竞争分析</strong><span class="more-link" data-jump="competition">查看更多+</span></div>
+            <div class="pill-row"><button class="pill active">企业竞争情报跟踪</button><button class="pill">同业竞争企业画像</button><button class="pill">风险动态</button></div>
+            <div class="feature-body">
+              <div class="feature-copy">
+                <div class="feature-highlight">
+                  <div class="date-box"><strong>25</strong><span>2026-03</span></div>
+                  <div class="feature-main">
+                    <h3>海天精工新增重大投资动态，涉及核心产线扩建与高端设备布局优化</h3>
+                    <p>已汇总重点企业产能、研发、投资和招采变化，并可对比企业历史经营表现，支持企业画像与风险跟踪。</p>
+                  </div>
+                </div>
+                <div class="news-list">
+                  <div class="news-item"><span>重点企业招投标新发现</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>某一标杆企业新设上海区域运营公司</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>同业头部企业现金储备与净资产收益变化分析</span><time>2026-03-24</time></div>
+                  <div class="news-item"><span>区域龙头企业最新供应链调整完成</span><time>2026-03-24</time></div>
+                </div>
+              </div>
+              <div class="feature-media"><img src="./竞争分析配图.png" alt="竞争分析配图" /></div>
+            </div>
+          </section>
+
+          <section class="feature-panel">
+            <div class="feature-head"><strong>展会资讯</strong><span class="more-link" data-jump="expo">查看更多+</span></div>
+            <div class="pill-row"><button class="pill active">会议资源共享</button><button class="pill">展会信息管理</button><button class="pill">AI会议助手</button></div>
+            <div class="feature-body reverse">
+              <div class="feature-media"><img src="./展会资讯配图.png" alt="展会资讯配图" /></div>
+              <div class="feature-copy">
+                <div class="feature-highlight">
+                  <div class="date-box"><strong>25</strong><span>2026-03</span></div>
+                  <div class="feature-main">
+                    <h3>中国国际机床展将于下周开幕，展会日历与议程安排同步更新</h3>
+                    <p>支持查看参展商、议题安排、会议室资源与会后材料沉淀，并可从会议日程页快速跳转到资料库。</p>
+                  </div>
+                </div>
+                <div class="news-list">
+                  <div class="news-item"><span>苏州智能产业交流活动预告</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>机床年度峰会议程更新第 3 批</span><time>2026-03-25</time></div>
+                  <div class="news-item"><span>AI 会议助手新增摘要生成能力</span><time>2026-03-24</time></div>
+                  <div class="news-item"><span>展台搭建与现场资料回收标准已发布</span><time>2026-03-24</time></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <section class="portal-page" data-page="knowledge"><div class="page-wrap"><div class="list-shell"><aside class="side-nav"><div class="side-head">政策库</div><button class="side-link active">政策库</button><button class="side-link">数据库</button><button class="side-link">企业库</button><button class="side-link">产品库</button><button class="side-link">展会资讯库</button><button class="side-link">重大项目库</button></aside><div class="list-content"><div class="list-table"><div class="list-row"><span class="list-bullet"></span><span>工业和信息化部办公厅关于做好2026年信息通信行业安全生产和网络运行安全工作的通知</span><time>2026-03-23</time></div><div class="list-row"><span class="list-bullet"></span><span>江西省工业和信息化厅 江西省财政厅关于印发支持深化制造业数智化转型若干措施的通知</span><time>2026-03-20</time></div><div class="list-row"><span class="list-bullet"></span><span>江西省工业强链建设工作领导小组关于印发江西省深化制造业数智化转型行动计划的通知</span><time>2026-03-19</time></div><div class="list-row"><span class="list-bullet"></span><span>省工业和信息化厅等九部门关于印发《江苏省脑机接口产业创新发展行动方案》的通知</span><time>2026-03-10</time></div><div class="list-row"><span class="list-bullet"></span><span>工业和信息化部办公厅关于启动工业数据筑基行动开展面向人工智能赋能的高质量行动通知</span><time>2026-03-10</time></div><div class="list-row"><span class="list-bullet"></span><span>关于印发江苏省“人工智能+制造”诊断工作方案（2026-2027）的通知</span><time>2026-03-09</time></div><div class="list-row"><span class="list-bullet"></span><span>自治区商务厅等7部门关于印发《九力发展数字消费共创数字时代美好生活三年行动方案》的通知</span><time>2026-03-03</time></div><div class="list-row"><span class="list-bullet"></span><span>关于印发《未成年人用户数量巨大和对未成年群体具有显著影响的网络平台服务提供者规定》的通知</span><time>2026-02-28</time></div><div class="list-row"><span class="list-bullet"></span><span>发挥信息通信业能力优势 支撑低空基础设施发展有关事项的通知</span><time>2026-02-27</time></div><div class="list-row"><span class="list-bullet"></span><span>海南省人民政府办公厅印发《海南省推动“人工智能+”行动方案（2026—2028年）》的通知</span><time>2026-02-25</time></div></div><div class="pager"><span>&lt;</span><span class="dot active">1</span><span class="dot">2</span><span class="dot">3</span><span class="dot">4</span><span class="dot">5</span><span class="dot">6</span><span>…</span><span>178</span><span>&gt;</span></div></div></div></div></section>
+    <section class="portal-page" data-page="policy"><div class="page-wrap"><div class="list-shell"><aside class="side-nav"><div class="side-head">国家政策法规与解读</div><button class="side-link active">国家政策法规与解读</button><button class="side-link">地方政策法规与解读</button></aside><div class="list-content"><div class="list-table"><div class="list-row"><span class="list-bullet"></span><span>工业和信息化部发布高端装备制造专项政策，明确支持智能化改造与核心装备升级</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>北京市智能制造专项资金申报开启</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>华东地区新增重点工程项目进入筹备阶段</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>机器人产业扶持政策解读文章已关联推送</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>重点项目设备投资机会跟踪更新第 6 条待判事项</span><time>2026-03-24</time></div></div></div></div></div></section>
+    <section class="portal-page" data-page="trend"><div class="page-wrap"><div class="list-shell"><aside class="side-nav"><div class="side-head">行业景气</div><button class="side-link active">行业景气</button><button class="side-link">数控机床</button><button class="side-link">智能制造</button></aside><div class="list-content"><div class="list-table"><div class="list-row"><span class="list-bullet"></span><span>液压设备行业周报已更新，市场需求与产能利用率同步上升</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>数控机床订单增幅连续三周扩大</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>环保装备市场价格趋稳 5 条</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>智能制造新型产线企业动态跟踪完成</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>机器人行业市场景气度监测指数同比上升</span><time>2026-03-23</time></div></div></div></div></div></section>
+    <section class="portal-page" data-page="competition"><div class="page-wrap"><div class="list-shell"><aside class="side-nav"><div class="side-head">企业竞争情报跟踪</div><button class="side-link active">企业竞争情报跟踪</button><button class="side-link">同业竞争企业画像</button><button class="side-link">风险动态</button></aside><div class="list-content"><div class="list-table"><div class="list-row"><span class="list-bullet"></span><span>海天精工新增重大投资动态，产线扩建计划进入实施阶段</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>重点企业招投标新发现</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>同业头部企业净资产收益变化分析</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>区域龙头企业供应链调整完成</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>企业画像标签体系新增资金面指标</span><time>2026-03-23</time></div></div></div></div></div></section>
+    <section class="portal-page" data-page="expo"><div class="page-wrap"><div class="list-shell"><aside class="side-nav"><div class="side-head">会议资源共享</div><button class="side-link active">会议资源共享</button><button class="side-link">展会信息管理</button><button class="side-link">AI会议助手</button></aside><div class="list-content"><div class="list-table"><div class="list-row"><span class="list-bullet"></span><span>中国国际机床展将于下周开幕，展会日历与议程安排同步更新</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>液压设备产业论坛新增 3 场专题交流活动</span><time>2026-03-25</time></div><div class="list-row"><span class="list-bullet"></span><span>机床年度峰会议程更新第 3 批</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>AI 会议助手新增摘要生成能力</span><time>2026-03-24</time></div><div class="list-row"><span class="list-bullet"></span><span>展台搭建与现场资料回收标准已发布</span><time>2026-03-23</time></div></div></div></div></div></section>
+    <section class="portal-page" data-page="profile"><div class="page-wrap"><div class="profile-shell"><aside class="profile-menu"><button class="active" data-profile="center">个人中心</button><button data-profile="history">浏览历史</button></aside><div class="profile-content"><div class="profile-panel active" data-profile-panel="center"><div class="profile-header"><strong>个人中心</strong><button class="go-backend">前往信息管理系统</button></div><div class="profile-user">👤 <span>测试管理员</span></div><div class="profile-grid"><div class="field"><label>昵称</label><div class="edit-box"><input value="测试管理" /><em>✎</em></div></div><div class="field"><label>权限</label><div class="edit-box"><input value="4级(管理员)" /><em>✎</em></div></div><div class="field"><label>部门</label><div class="edit-box"><input value="test" /><em>✎</em></div></div><div class="field"><label>二级部门</label><div class="edit-box"><input value="" /><em>✎</em></div></div><div class="field"><label>职务</label><div class="edit-box"><input value="测试" /><em>✎</em></div></div><div class="field"><label>感兴趣的领域</label><div class="edit-box"><select><option>请选择</option><option>政策库</option><option>行业趋势</option><option>竞争分析</option></select><em>✎</em></div></div><div class="field field-wide"><label></label><div class="edit-box" style="grid-template-columns:1fr"><input placeholder="如选择其他,请在此输入具体领域" /></div></div></div></div><div class="profile-panel" data-profile-panel="history"><div class="profile-header"><strong>浏览历史</strong><button class="ghost-btn" data-portal-back="home">返回首页</button></div><div class="history-table"><div class="history-head"><span>时间</span><span>标题</span></div><div class="history-item"><span>2026-03-24 14:20</span><span>北京市高端装备产业扶持政策解读</span></div><div class="history-item"><span>2026-03-24 13:05</span><span>液压设备行业周报</span></div><div class="history-item"><span>2026-03-24 11:42</span><span>恒立液压企业竞争画像</span></div></div></div></div></div></div></section>
+  </section>
+  <section class="workspace" data-workspace="backend"><div class="backend-layout"><aside class="backend-sidebar"><div class="backend-brand"><div class="backend-badge">管</div><h2>信息管理系统</h2><p>按参考图拆解出的后台功能 demo，覆盖用户管理、内容管理、信息推送模块。</p></div><button class="backend-link active" data-backend="dashboard">首页</button><button class="backend-link" data-backend="user-list">用户管理</button><button class="backend-link" data-backend="content-list">内容管理</button><button class="backend-link" data-backend="push-feed">信息推送</button><button class="backend-link" data-backend="my-profile">我的</button></aside><main class="backend-main"><div class="backend-topbar"><strong id="backendTitle">后台首页</strong><div class="backend-user" data-backend="my-profile">测试管理员</div></div>
+    <section class="backend-page active" data-backend-page="dashboard"><div class="backend-card"><div style="border-radius:20px;padding:34px;background:linear-gradient(135deg,rgba(14,91,168,.96),rgba(73,166,255,.9));color:#fff;position:relative;overflow:hidden;"><div style="position:absolute;right:-80px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);"></div><h3 style="position:relative;z-index:1;margin:0 0 12px;font-size:30px;">欢迎进入产业研究及市场分析智能平台信息管理系统</h3><p style="position:relative;z-index:1;margin:0;max-width:860px;color:rgba(255,255,255,.9);line-height:1.9;">当前后台聚焦用户管理、内容管理与信息推送，不做运营大屏，只保留稳定的管理入口。</p></div></div></section>
+    <section class="backend-page" data-backend-page="user-list"><div class="backend-card"><div class="backend-tabs"><button class="active">用户管理</button><button data-backend-back="role-list">角色管理</button></div><div class="toolbar-row"><span>所属部门</span><select class="backend-select"><option>全部</option></select><span>角色</span><select class="backend-select"><option>全部</option></select><span>状态</span><select class="backend-select"><option>全部</option></select><span>入职</span><select class="backend-select"><option>全部</option></select><input class="backend-input" value="输入人员名称" /><button class="primary-btn">搜索</button></div><table class="backend-table"><thead><tr><th>邮箱</th><th>姓名</th><th>部门</th><th>职位</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>zhangsan@example.com</td><td>张三</td><td>财务部</td><td>财务部主任</td><td>角色A</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>li@example.com</td><td>李四</td><td>财务部</td><td>财务下线组</td><td>角色B</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>wangwu@example.com</td><td>王五</td><td>市场部</td><td>市场经理</td><td>角色C</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>zhaoliu@example.com</td><td>赵六</td><td>人事部</td><td>HRBP</td><td>角色A</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>qianqi@example.com</td><td>钱七</td><td>行政部</td><td>行政专员</td><td>角色D</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>sunba@example.com</td><td>孙八</td><td>财务部</td><td>会计</td><td>角色B</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>zhoujiu@example.com</td><td>周九</td><td>技术部</td><td>测试工程师</td><td>角色A</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr><tr><td>wushi@example.com.cn</td><td>吴十</td><td>市场部</td><td>绩效代表</td><td>角色C</td><td class="state-on">开启</td><td><button class="mini-btn">编辑</button> <button class="mini-btn">编辑部门</button></td></tr></tbody></table><div class="pager"><span>&lt;</span><span class="dot active">1</span><span class="dot">2</span><span class="dot">3</span><span class="dot">4</span><span class="dot">5</span><span class="dot">6</span><span>200</span><span>&gt;</span></div></div></section>
+    <section class="backend-page" data-backend-page="role-list"><div class="backend-card"><div class="backend-tabs"><button data-backend-back="user-list">用户管理</button><button class="active">角色管理</button></div><div style="display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px;"><div class="toolbar-actions"><button class="primary-btn">+ 添加角色</button></div><div class="toolbar-actions-right"><input class="backend-input" value="输入角色名" /><button class="ghost-btn">搜索</button></div></div><table class="backend-table"><thead><tr><th>角色</th><th>角色描述</th><th>人数</th><th>操作</th></tr></thead><tbody><tr><td>角色A</td><td>普通账号权限，具备基础管理权限</td><td>2625</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色B</td><td>部门数据权限，可管理部门内容</td><td>7</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色C</td><td>内容编辑岗，负责内容发布和维护</td><td>5</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色D</td><td>内容管理员，具备动态发布权限</td><td>2</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色E</td><td>财务分析岗，可查看财务订阅页</td><td>0</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色F</td><td>运营岗，可管理订阅方案</td><td>1</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色G</td><td>项目负责人，可跟踪关键项目</td><td>0</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr><tr><td>角色H</td><td>审稿角色，负责最终内容发布</td><td>0</td><td><button class="mini-btn">权限控制</button> <button class="mini-btn">编辑人员</button> <button class="mini-btn danger">删除</button></td></tr></tbody></table></div></section>
+    <section class="backend-page" data-backend-page="content-list"><div class="backend-card"><div class="toolbar-row"><span>文章题目</span><input class="backend-input" value="请输入内容标题" /><span>审核状态</span><select class="backend-select"><option>不限</option></select><span>发布状态</span><select class="backend-select"><option>不限</option></select><span>上传人</span><input class="backend-input" value="请输入上传人" /><span>时间范围</span><input class="backend-input" style="min-width:230px;" value="开始日期 至 结束日期" /><button class="primary-btn">查询</button></div><div class="toolbar-actions" style="margin-bottom:12px;"><button class="primary-btn">立即上传</button><button class="primary-btn">批量下载</button><button class="primary-btn">批量删除</button></div><table class="backend-table"><thead><tr><th></th><th>文章题目</th><th>内容摘要</th><th>类型</th><th>上传人</th><th>审核状态</th><th>发布日期</th><th>操作</th></tr></thead><tbody><tr><td><input type="checkbox" /></td><td><a href="#" data-open-detail>11</a></td><td>内容管理</td><td>内部资料</td><td>财务管理员</td><td class="state-wait">待审核</td><td>2025-06-20</td><td><button class="mini-btn" data-open-detail>详情</button> <button class="mini-btn">编辑</button> <button class="mini-btn danger">删除</button></td></tr><tr><td><input type="checkbox" /></td><td>测试</td><td>内容管理</td><td>内部资料</td><td>测试管理员</td><td>未审核</td><td>2025-06-20</td><td><button class="mini-btn" data-open-detail>详情</button> <button class="mini-btn">编辑</button> <button class="mini-btn danger">删除</button></td></tr><tr><td><input type="checkbox" /></td><td>121</td><td>内容管理</td><td>内部资料</td><td>测试管理员</td><td>未审核</td><td>2025-06-20</td><td><button class="mini-btn" data-open-detail>详情</button> <button class="mini-btn">编辑</button> <button class="mini-btn danger">删除</button></td></tr><tr><td><input type="checkbox" /></td><td>221212</td><td>内容管理</td><td>内部资料</td><td>财务管理员_wangchen</td><td>未审核</td><td>2025-06-20</td><td><button class="mini-btn" data-open-detail>详情</button> <button class="mini-btn">编辑</button> <button class="mini-btn danger">删除</button></td></tr><tr><td><input type="checkbox" /></td><td>2121</td><td>外部资料</td><td>外部资料</td><td>测试管理员_qzhang</td><td class="state-pass">审核通过</td><td>2025-06-18</td><td><button class="mini-btn" data-open-detail>详情</button> <button class="mini-btn">编辑</button> <button class="mini-btn danger">删除</button></td></tr></tbody></table></div></section>
+    <section class="backend-page" data-backend-page="content-detail"><div class="detail-layout"><div class="form-card"><div class="form-stack"><div class="form-item"><label>标题/摘要编辑框</label><input value="121212" /></div><div class="form-item"><label>类型</label><select><option>通知</option></select></div><div class="form-item"><label>状态</label><select><option>已发布</option></select></div><div class="form-item"><label>发布时间</label><input value="2025-06-20" /></div><div class="form-item"><label>上传人</label><input value="财务管理_wangchen" /></div><div class="form-item"><label>简介</label><textarea placeholder="请输入简介..."></textarea></div><div class="form-item"><label>正文</label><textarea></textarea></div></div></div><div class="form-card"><div class="file-head"><strong>文件列表</strong><button class="primary-btn">+上传</button></div><div class="file-grid-head"><span>文件名称</span><span>缩略图</span><span>文件类型</span><span>上传人</span><span>上传时间</span><span>操作</span></div><div class="empty">暂无数据</div></div></div><div class="detail-actions"><button class="primary-btn">保存</button><button class="ghost-btn" data-backend-back="content-list">返回</button></div></section>
+    <section class="backend-page" data-backend-page="push-feed"><div class="backend-card"><div class="backend-tabs"><button class="active">订阅动态</button><button data-backend-back="push-tags">订阅管理</button></div><div style="display:flex;gap:18px;font-size:13px;color:#4e657f;margin-bottom:18px;"><span style="color:#2563eb;font-weight:700;">全部</span><span style="color:#ef4444;font-weight:700;">主题1</span></div><div class="push-card"><time>2025-11-27 10:15:00</time><h4>【简报1】主题1相关内容摘要推送</h4><p>这是关于主题1的最新内容摘要，介绍了相关的创新成果和重要信息。此文章涵盖了多个专业领域的动态，为用户提供全面的参考信息。</p></div><div class="push-card"><time>2025-11-27 10:16:00</time><h4>【简报2】主题2：关于某类政策与技术进展的分析</h4><p>本文详细分析了涉及主题2的政策动态，重点关注政策执行过程中的变化和影响，提出对应建议，为行业分析提供了参考依据。</p></div><div class="push-card"><time>2025-11-27 09:00:00</time><h4>【简报3】2025年主题3变动趋势报告</h4><p>本分析深入剖析了主题3在2025年的发展趋势，探讨了潜在的市场机会、政策导向及技术演进，以及行业对其未来的整体判断。</p></div></div></section>
+    <section class="backend-page" data-backend-page="push-tags"><div class="backend-card"><div class="backend-tabs"><button data-backend-back="push-feed">订阅动态</button><button class="active">订阅管理</button></div><div class="tag-bar"><div class="tag-line"></div><strong style="font-size:24px;">订阅标签</strong></div><div class="tag-list"><span class="tag-pill">主题1 ×</span><span class="tag-pill">主题2 ×</span><span class="tag-pill">主题3 ×</span><span class="tag-pill">主题4 ×</span><span class="tag-pill active">新增</span></div></div></section>
+    <section class="backend-page" data-backend-page="my-profile"><div class="backend-card"><div class="profile-header"><strong>我的</strong><div style="display:flex;gap:12px;"><button class="ghost-btn">用户意见反馈</button><button class="primary-btn" data-backend-to-portal>前往站点系统</button></div></div><div class="profile-user">👤 <span>测试管理员</span></div><div class="profile-grid"><div class="field"><label>昵称</label><div class="edit-box"><input value="测试管理" /><em>✎</em></div></div><div class="field"><label>权限</label><div class="edit-box"><input value="4级(管理员)" /><em>✎</em></div></div><div class="field"><label>部门</label><div class="edit-box"><input value="test" /><em>✎</em></div></div><div class="field"><label>二级部门</label><div class="edit-box"><input value="" /><em>✎</em></div></div><div class="field"><label>职务</label><div class="edit-box"><input value="测试" /><em>✎</em></div></div><div class="field"><label>感兴趣的领域</label><div class="edit-box"><select><option>请选择</option><option>政策库</option><option>行业趋势</option><option>竞争分析</option></select><em>✎</em></div></div><div class="field field-wide"><label></label><div class="edit-box" style="grid-template-columns:1fr"><input placeholder="如选择其他,请在此输入具体领域" /></div></div></div></div></section>
+  </main></div></section>
+  <script>
+    (function () {
+      const qsa = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const modeTabs = qsa("[data-mode]");
+      const workspaces = qsa("[data-workspace]");
+      const portalLinks = qsa("[data-portal]");
+      const portalPages = qsa("[data-page]");
+      const profileTabs = qsa("[data-profile]");
+      const profilePanels = qsa("[data-profile-panel]");
+      const backendLinks = qsa("[data-backend]");
+      const backendPages = qsa("[data-backend-page]");
+      const backendTitle = document.getElementById("backendTitle");
+
+      function setMode(mode) {
+        modeTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === mode));
+        workspaces.forEach((space) => space.classList.toggle("active", space.dataset.workspace === mode));
+      }
+
+      function showPortal(page) {
+        portalLinks.forEach((link) => link.classList.toggle("active", link.dataset.portal === page));
+        portalPages.forEach((panel) => panel.classList.toggle("active", panel.dataset.page === page));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function showProfile(panel) {
+        profileTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.profile === panel));
+        profilePanels.forEach((item) => item.classList.toggle("active", item.dataset.profilePanel === panel));
+      }
+
+      function showBackend(page) {
+        const parentMap = {
+          dashboard: "dashboard",
+          "user-list": "user-list",
+          "role-list": "user-list",
+          "content-list": "content-list",
+          "content-detail": "content-list",
+          "push-feed": "push-feed",
+          "push-tags": "push-feed",
+          "my-profile": "my-profile"
+        };
+        const titleMap = {
+          dashboard: "后台首页",
+          "user-list": "用户管理",
+          "role-list": "用户管理",
+          "content-list": "内容管理",
+          "content-detail": "内容管理",
+          "push-feed": "订阅动态",
+          "push-tags": "订阅动态",
+          "my-profile": "我的"
+        };
+        const activeKey = parentMap[page] || page;
+        backendLinks.forEach((link) => link.classList.toggle("active", link.dataset.backend === activeKey));
+        backendPages.forEach((panel) => panel.classList.toggle("active", panel.dataset.backendPage === page));
+        if (backendTitle) backendTitle.textContent = titleMap[page] || "";
+      }
+
+      modeTabs.forEach((tab) => tab.addEventListener("click", () => setMode(tab.dataset.mode)));
+      portalLinks.forEach((link) => link.addEventListener("click", () => { setMode("portal"); showPortal(link.dataset.portal); }));
+      qsa("[data-jump]").forEach((node) => node.addEventListener("click", () => { setMode("portal"); showPortal(node.dataset.jump); }));
+      qsa("[data-open-profile]").forEach((node) => node.addEventListener("click", () => { setMode("portal"); showPortal("profile"); showProfile("center"); }));
+      profileTabs.forEach((tab) => tab.addEventListener("click", () => showProfile(tab.dataset.profile)));
+      qsa("[data-portal-back]").forEach((node) => node.addEventListener("click", () => { showProfile("center"); showPortal(node.dataset.portalBack); }));
+      qsa(".go-backend").forEach((node) => node.addEventListener("click", () => { setMode("backend"); showBackend("dashboard"); }));
+      backendLinks.forEach((link) => link.addEventListener("click", () => { setMode("backend"); showBackend(link.dataset.backend); }));
+      qsa("[data-open-detail]").forEach((node) => node.addEventListener("click", (event) => { event.preventDefault(); setMode("backend"); showBackend("content-detail"); }));
+      qsa("[data-backend-back]").forEach((node) => node.addEventListener("click", () => { setMode("backend"); showBackend(node.dataset.backendBack); }));
+      qsa("[data-backend-to-portal]").forEach((node) => node.addEventListener("click", () => { setMode("portal"); showPortal("home"); }));
+
+      showPortal("home");
+      showProfile("center");
+      showBackend("dashboard");
+      setMode("portal");
+    })();
+  </script>
+</body>
+</html>
